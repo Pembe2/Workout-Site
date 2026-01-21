@@ -63,15 +63,33 @@
           <div class="muted small">If set complete, rest begins automatically.</div>
         </div>
 
+        <div class="field">
+          <label class="label" for="savedWorkoutSelect">Saved workouts</label>
+          <select id="savedWorkoutSelect" class="select">
+            <option value="">No saved workouts</option>
+          </select>
+          <div class="muted small">Load a saved workout into the builder.</div>
+        </div>
+
         <div class="toolbar-actions">
           <button id="clearWorkout" class="btn secondary" type="button">Clear</button>
           <button id="saveWorkout" class="btn secondary" type="button">Save</button>
+          <button id="loadWorkout" class="btn secondary" type="button">Load</button>
           <button id="startWorkout" class="btn primary" type="button">Start</button>
         </div>
       </div>
 
       <div class="builder-grid">
         <div>
+          <div class="panel block-panel">
+            <div class="panel-head">
+              <div class="h2">Blocks & circuits</div>
+              <div class="muted">Group exercises into blocks and mark a block as a circuit to run in rounds.</div>
+            </div>
+            <div id="blockList" class="stack"></div>
+            <button id="addBlock" class="btn secondary" type="button" style="margin-top:10px;">Add block</button>
+          </div>
+
           <div class="muted small">Workout items</div>
           <div id="workoutList" class="stack" style="margin-top:10px;"></div>
           <div id="emptyState" class="muted" style="margin-top:10px;">
@@ -81,35 +99,78 @@
 
         <div>
           <div class="muted small">Run console</div>
-          <div class="runner panel runner-panel" id="runner">
-            <div class="runner-top">
-              <div>
-                <div class="runner-title" id="runTitle">Not started</div>
-                <div class="runner-sub muted" id="runSub">Press Start when your workout is ready.</div>
-              </div>
-              <div class="chips" id="runChips"></div>
-            </div>
-
-            <div class="timer">
-              <div class="timer-value" id="timerValue">00:00</div>
-              <div class="timer-label muted" id="timerLabel">Timer</div>
-            </div>
-
-            <div class="runner-actions">
-              <button id="pauseResume" class="btn secondary" type="button" disabled>Pause</button>
-              <button id="completeSet" class="btn primary" type="button" disabled>Set complete</button>
-              <button id="skip" class="btn secondary" type="button" disabled>Skip</button>
-              <button id="stop" class="btn danger" type="button" disabled>Stop</button>
-            </div>
-
-            <div class="muted small" style="margin-top:10px;" id="runnerHint">
-              Timed sets run automatically. For rep-based sets, click <b>Set complete</b> to begin rest and advance.
-            </div>
+          <div class="panel runner-placeholder">
+            <div class="muted">Press Start to open the workout runner view.</div>
           </div>
         </div>
       </div>
     </section>
   </main>
+
+  <div class="run-modal" id="runModal" aria-hidden="true">
+    <div class="run-modal-backdrop" data-action="closeRun"></div>
+    <div class="run-modal-panel" role="dialog" aria-modal="true" aria-labelledby="runTitle">
+      <div class="run-modal-header">
+        <div>
+          <div class="runner-title" id="runModalTitle">Workout runner</div>
+          <div class="muted small" id="runModalSub">Track sets, reps, and weights as you go.</div>
+        </div>
+        <button class="btn secondary" type="button" data-action="closeRun">Close</button>
+      </div>
+
+      <div class="runner panel runner-panel" id="runner">
+        <div class="runner-top">
+          <div>
+            <div class="runner-title" id="runTitle">Not started</div>
+            <div class="runner-sub muted" id="runSub">Press Start when your workout is ready.</div>
+          </div>
+          <div class="chips" id="runChips"></div>
+        </div>
+
+        <div class="timer">
+          <div class="timer-value" id="timerValue">00:00</div>
+          <div class="timer-label muted" id="timerLabel">Timer</div>
+        </div>
+
+        <div class="set-log" id="setLog">
+          <div class="muted small">Log this set</div>
+          <div class="set-log-grid">
+            <div class="field">
+              <label class="label" for="runReps">Reps done</label>
+              <input id="runReps" class="input" type="number" min="0" step="1" placeholder="Target: --">
+            </div>
+            <div class="field">
+              <label class="label" for="runWeight">Weight</label>
+              <input id="runWeight" class="input" type="text" placeholder="e.g., 135 lb / 60 kg">
+            </div>
+            <div class="field">
+              <label class="label" for="runNotes">Notes</label>
+              <input id="runNotes" class="input" type="text" placeholder="RPE, form notes, tempo">
+            </div>
+          </div>
+        </div>
+
+        <div class="runner-actions">
+          <button id="pauseResume" class="btn secondary" type="button" disabled>Pause</button>
+          <button id="completeSet" class="btn primary" type="button" disabled>Set complete</button>
+          <button id="skip" class="btn secondary" type="button" disabled>Skip</button>
+          <button id="stop" class="btn danger" type="button" disabled>Stop</button>
+        </div>
+
+        <div class="muted small" style="margin-top:10px;" id="runnerHint">
+          Timed sets run automatically. For rep-based sets, click <b>Set complete</b> to begin rest and advance.
+        </div>
+      </div>
+
+      <div class="panel run-summary" id="runSummary" hidden>
+        <div class="panel-head">
+          <div class="h2">Workout summary</div>
+          <div class="muted" id="runSummarySub">Set details logged during the session.</div>
+        </div>
+        <div id="runSummaryBody" class="summary-list"></div>
+      </div>
+    </div>
+  </div>
 
   <footer class="footer">
     <div class="wrap muted">Workouts are stored locally in your browser.</div>

@@ -21,12 +21,13 @@ function safeParse(jsonStr, fallback){
 
 function loadDraft(){
   const d = safeParse(localStorage.getItem(WORKOUT_KEY), null);
-  if(!d || typeof d !== "object") return { name:"", globalRestSec:60, autoStartRest:true, items:[] };
+  if(!d || typeof d !== "object") return { name:"", globalRestSec:60, autoStartRest:true, items:[], blocks:[] };
   return {
     name: typeof d.name === "string" ? d.name : "",
     globalRestSec: Number.isFinite(+d.globalRestSec) ? Math.max(0, +d.globalRestSec) : 60,
     autoStartRest: d.autoStartRest !== false,
     items: Array.isArray(d.items) ? d.items : [],
+    blocks: Array.isArray(d.blocks) ? d.blocks : [],
   };
 }
 
@@ -58,11 +59,128 @@ function chip(text){ return `<span class="chip">${text}</span>`; }
 
 let draft = loadDraft();
 
+function openRunModal(){
+  const modal = $("#runModal");
+  if(!modal) return;
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeRunModal(){
+  const modal = $("#runModal");
+  if(!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+function setLogVisibility(isVisible){
+  const el = $("#setLog");
+  if(el) el.style.display = isVisible ? "block" : "none";
+}
+
+function resetSetLogInputs(item){
+  const repsEl = $("#runReps");
+  const weightEl = $("#runWeight");
+  const notesEl = $("#runNotes");
+  if(repsEl){
+    repsEl.value = "";
+    if(item?.isTimed){
+      repsEl.placeholder = "Optional";
+    } else {
+      const reps = Math.max(1, +item?.reps || 10);
+      repsEl.placeholder = `Target: ${reps}`;
+    }
+  }
+  if(weightEl) weightEl.value = "";
+  if(notesEl) notesEl.value = "";
+}
+
+function captureSetLog(){
+  if(!runState || runState.phase !== "work") return;
+  const item = currentItem();
+  if(!item) return;
+  if(!Array.isArray(runState.logs)) runState.logs = [];
+
+  const repsVal = $("#runReps")?.value?.trim();
+  const weightVal = $("#runWeight")?.value?.trim();
+  const notesVal = $("#runNotes")?.value?.trim();
+
+  runState.logs.push({
+    itemUid: item.uid,
+    exerciseId: item.exerciseId,
+    name: item.name,
+    set: currentEntry()?.set || 1,
+    idx: runState.queueIndex,
+    isTimed: !!item.isTimed,
+    targetReps: item.isTimed ? null : Math.max(1, +item.reps || 0),
+    targetDurationSec: item.isTimed ? Math.max(1, +item.durationSec || 0) : null,
+    actualReps: repsVal ? Math.max(0, parseInt(repsVal, 10)) : null,
+    weight: weightVal || "",
+    notes: notesVal || ""
+  });
+}
+
+function renderSummary(logs){
+  const wrap = $("#runSummary");
+  const body = $("#runSummaryBody");
+  if(!wrap || !body) return;
+  wrap.hidden = false;
+
+  const logList = Array.isArray(logs) ? logs : (runState?.logs || []);
+  if(logList.length === 0){
+    body.innerHTML = `<div class="muted">No sets logged.</div>`;
+    return;
+  }
+
+  const html = draft.items.map((item) => {
+    const entries = logList.filter((log) => log.itemUid === item.uid);
+    if(entries.length === 0){
+      return `
+        <div class="summary-group">
+          <div class="summary-title">${item.name}</div>
+          <div class="summary-meta muted">No sets logged.</div>
+        </div>
+      `;
+    }
+
+    const rows = entries.map((log) => {
+      const repsText = log.actualReps !== null ? `${log.actualReps}` : (log.targetReps ? `${log.targetReps} target` : "--");
+      const weightText = log.weight ? log.weight : "--";
+      const details = [
+        log.isTimed && log.targetDurationSec ? `Time: ${log.targetDurationSec}s` : null,
+        log.notes ? `Notes: ${log.notes}` : null
+      ].filter(Boolean).join(" • ") || "--";
+      return `
+        <div class="summary-row">
+          <div>Set ${log.set}</div>
+          <div>Reps: ${repsText}</div>
+          <div>Weight: ${weightText}</div>
+          <div>${details}</div>
+        </div>
+      `;
+    }).join("");
+
+    return `
+      <div class="summary-group">
+        <div class="summary-title">${item.name}</div>
+        <div class="summary-meta muted">${entries.length} set${entries.length === 1 ? "" : "s"} logged</div>
+        <div class="summary-rows">${rows}</div>
+      </div>
+    `;
+  }).join("");
+
+  body.innerHTML = html;
+}
+
 // ----------------- Builder rendering -----------------
 function render(){
   $("#workoutName").value = draft.name || "";
   $("#globalRest").value = draft.globalRestSec ?? 60;
   $("#autoStartRest").value = draft.autoStartRest ? "yes" : "no";
+  renderSavedWorkouts();
+  renderBlocks();
 
   const list = $("#workoutList");
   const empty = $("#emptyState");
@@ -79,10 +197,15 @@ function renderItem(item){
   const ex = EXERCISES.find(x => x.id === item.exerciseId);
   const groupLabel = GROUPS.find(g => g.id === (ex?.group || item.group))?.label || item.group || "Group";
   const tags = (ex?.tags || []).map(t => TAGS.find(x => x.id === t)?.label || t);
-  const headerChips = [groupLabel, ...tags].filter(Boolean).map(chip).join("");
+  const block = draft.blocks.find(b => b.id === item.blockId);
+  const blockLabel = block ? block.name : "";
+  const blockChips = block ? [blockLabel, block.isCircuit ? `Circuit ${block.rounds || 1}x` : "Block"] : [];
+  const headerChips = [groupLabel, ...tags, ...blockChips].filter(Boolean).map(chip).join("");
 
   const isTimed = !!item.isTimed;
-  const restEffective = item.restOverrideEnabled ? item.restSec : draft.globalRestSec;
+  const isCircuit = !!block?.isCircuit;
+  const restEffective = getRestSec(item);
+  const restLabel = block?.restOverrideEnabled ? "Block rest" : (item.restOverrideEnabled ? "Item rest" : "Rest");
 
   return `
     <div class="item" data-uid="${item.uid}">
@@ -93,14 +216,14 @@ function renderItem(item){
         </div>
         <div class="chips">
           ${chip(isTimed ? "Timed" : "Reps")}
-          ${chip(`Rest: ${restEffective}s`)}
+          ${chip(`${restLabel}: ${restEffective}s`)}
         </div>
       </div>
 
       <div class="item-controls">
         <div class="field">
-          <label class="label">Sets</label>
-          <input class="input" type="number" min="1" step="1" data-field="sets" value="${item.sets ?? 3}">
+          <label class="label">${isCircuit ? "Rounds (from block)" : "Sets"}</label>
+          <input class="input" type="number" min="1" step="1" data-field="sets" value="${isCircuit ? (block?.rounds ?? 1) : (item.sets ?? 3)}" ${isCircuit ? "disabled" : ""}>
         </div>
 
         <div class="field">
@@ -114,6 +237,14 @@ function renderItem(item){
         <div class="field">
           <label class="label">${isTimed ? "Duration (sec)" : "Reps"}</label>
           <input class="input" type="number" min="1" step="1" data-field="${isTimed ? "durationSec" : "reps"}" value="${isTimed ? (item.durationSec ?? 45) : (item.reps ?? 10)}">
+        </div>
+
+        <div class="field">
+          <label class="label">Block</label>
+          <select class="select" data-field="blockId">
+            <option value="">None</option>
+            ${draft.blocks.map(b => `<option value="${b.id}" ${item.blockId === b.id ? "selected" : ""}>${b.name}${b.isCircuit ? " (Circuit)" : ""}</option>`).join("")}
+          </select>
         </div>
 
         <div class="field">
@@ -146,8 +277,118 @@ function updateDraftFromTopControls(){
   saveDraft(draft);
 }
 
+function renderSavedWorkouts(){
+  const select = $("#savedWorkoutSelect");
+  if(!select) return;
+  const saved = loadSavedWorkouts();
+  if(saved.length === 0){
+    select.innerHTML = `<option value="">No saved workouts</option>`;
+    return;
+  }
+  select.innerHTML = saved.map((w, idx) => {
+    const name = w.name || `Workout ${idx + 1}`;
+    const date = w.savedAt ? new Date(w.savedAt).toLocaleDateString() : "";
+    return `<option value="${idx}">${name}${date ? ` • ${date}` : ""}</option>`;
+  }).join("");
+  select.value = "";
+}
+
+function renderBlocks(){
+  const list = $("#blockList");
+  if(!list) return;
+  if(!Array.isArray(draft.blocks) || draft.blocks.length === 0){
+    list.innerHTML = `<div class="muted">No blocks yet. Add one to group or circuit exercises.</div>`;
+    return;
+  }
+
+  list.innerHTML = draft.blocks.map((block) => `
+    <div class="block-row" data-block="${block.id}">
+      <div class="item-title">${block.name || "Untitled block"}</div>
+      <div class="block-controls">
+        <div class="field">
+          <label class="label">Name</label>
+          <input class="input" type="text" data-block-field="name" value="${block.name || ""}">
+        </div>
+        <div class="field">
+          <label class="label">Rounds</label>
+          <input class="input" type="number" min="1" step="1" data-block-field="rounds" value="${block.rounds ?? 3}">
+        </div>
+        <div class="field">
+          <label class="label">Circuit?</label>
+          <select class="select" data-block-field="isCircuit">
+            <option value="false" ${!block.isCircuit ? "selected" : ""}>No</option>
+            <option value="true" ${block.isCircuit ? "selected" : ""}>Yes</option>
+          </select>
+        </div>
+        <div class="field">
+          <label class="label">Rest override?</label>
+          <select class="select" data-block-field="restOverrideEnabled">
+            <option value="false" ${!block.restOverrideEnabled ? "selected" : ""}>Use item/default</option>
+            <option value="true" ${block.restOverrideEnabled ? "selected" : ""}>Override</option>
+          </select>
+        </div>
+        <div class="field" style="${block.restOverrideEnabled ? "" : "opacity:.55;"}">
+          <label class="label">Rest (sec)</label>
+          <input class="input" type="number" min="0" step="5" data-block-field="restSec" value="${block.restSec ?? 60}" ${block.restOverrideEnabled ? "" : "disabled"}>
+        </div>
+      </div>
+      <div class="item-actions">
+        <button class="btn danger" type="button" data-block-action="remove">Remove</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function buildRunQueue(){
+  const queue = [];
+  const blocks = Array.isArray(draft.blocks) ? draft.blocks : [];
+  const circuitBlocks = new Set(blocks.filter(b => b.isCircuit).map(b => b.id));
+  const handledCircuitBlocks = new Set();
+
+  for(const item of draft.items){
+    const blockId = item.blockId;
+    const block = blocks.find(b => b.id === blockId);
+    const isCircuit = blockId && circuitBlocks.has(blockId);
+
+    if(isCircuit){
+      if(handledCircuitBlocks.has(blockId)) continue;
+      handledCircuitBlocks.add(blockId);
+
+      const blockItems = draft.items.filter(i => i.blockId === blockId);
+      const rounds = Math.max(1, +block?.rounds || 1);
+      for(let round = 1; round <= rounds; round += 1){
+        for(const bItem of blockItems){
+          queue.push({
+            itemUid: bItem.uid,
+            set: round,
+            totalSets: rounds,
+            isCircuit: true,
+            blockId,
+            blockName: block?.name || "Circuit",
+          });
+        }
+      }
+      continue;
+    }
+
+    const sets = Math.max(1, +item.sets || 1);
+    for(let s = 1; s <= sets; s += 1){
+      queue.push({
+        itemUid: item.uid,
+        set: s,
+        totalSets: sets,
+        isCircuit: false,
+        blockId,
+        blockName: block?.name || "",
+      });
+    }
+  }
+
+  return queue;
+}
+
 // ----------------- Timer / Runner -----------------
-let runState = null; // { phase, idx, set, remainingSec, intervalId, paused, activeRestSec }
+let runState = null; // { phase, queueIndex, remainingSec, intervalId, paused, activeRestSec, queue, logs }
 function setRunnerButtons(enabled){
   $("#pauseResume").disabled = !enabled;
   $("#completeSet").disabled = !enabled;
@@ -187,12 +428,43 @@ function startCountdown(seconds, onDone){
 }
 
 function getRestSec(item){
-  return item.restOverrideEnabled ? Math.max(0, +item.restSec || 0) : Math.max(0, +draft.globalRestSec || 0);
+  const block = draft.blocks?.find(b => b.id === item.blockId);
+  if(block?.restOverrideEnabled){
+    return Math.max(0, +block.restSec || 0);
+  }
+  if(item.restOverrideEnabled){
+    return Math.max(0, +item.restSec || 0);
+  }
+  return Math.max(0, +draft.globalRestSec || 0);
+}
+
+function getRestSecForEntry(entry, item){
+  if(!entry || !item) return 0;
+  if(entry.isCircuit){
+    const next = runState?.queue?.[runState.queueIndex + 1];
+    const sameBlock = next?.isCircuit && next?.blockId && next.blockId === entry.blockId;
+    const sameRound = sameBlock && next?.set === entry.set;
+    if(sameRound){
+      return 0;
+    }
+    const block = draft.blocks?.find(b => b.id === entry.blockId);
+    if(block?.restOverrideEnabled){
+      return Math.max(0, +block.restSec || 0);
+    }
+    return Math.max(0, +draft.globalRestSec || 0);
+  }
+  return getRestSec(item);
+}
+
+function currentEntry(){
+  if(!runState) return null;
+  return runState.queue?.[runState.queueIndex] || null;
 }
 
 function currentItem(){
-  if(!runState) return null;
-  return draft.items[runState.idx] || null;
+  const entry = currentEntry();
+  if(!entry) return null;
+  return draft.items.find(i => i.uid === entry.itemUid) || null;
 }
 
 function beginWorkPhase(){
@@ -202,14 +474,19 @@ function beginWorkPhase(){
     return;
   }
   const ex = EXERCISES.find(x => x.id === item.exerciseId);
-  const setNum = runState.set + 1;
-  const totalSets = Math.max(1, +item.sets || 1);
+  const entry = currentEntry();
+  const setNum = entry?.set || 1;
+  const totalSets = entry?.totalSets || Math.max(1, +item.sets || 1);
 
   const chipsHtml = [
     chip(GROUPS.find(g => g.id === (ex?.group || item.group))?.label || "Group"),
-    chip(`Exercise ${runState.idx + 1}/${draft.items.length}`),
-    chip(`Set ${setNum}/${totalSets}`)
+    chip(`Step ${runState.queueIndex + 1}/${runState.queue.length}`),
+    chip(`${entry?.isCircuit ? "Round" : "Set"} ${setNum}/${totalSets}`),
+    entry?.isCircuit ? chip(entry.blockName || "Circuit") : ""
   ].join("");
+
+  setLogVisibility(true);
+  resetSetLogInputs(item);
 
   if(item.isTimed){
     const dur = Math.max(1, +item.durationSec || 45);
@@ -223,7 +500,7 @@ function beginWorkPhase(){
     const reps = Math.max(1, +item.reps || 10);
     setRunnerUI(item.name, `Reps: ${reps}. Click “Set complete” when finished.`, "Work", 0, chipsHtml);
     clearIntervalSafe();
-    $("#timerValue").textContent = "—";
+    $("#timerValue").textContent = "";
     $("#completeSet").disabled = false;
   }
 }
@@ -234,7 +511,8 @@ function beginRestPhase(){
     finishWorkout();
     return;
   }
-  const rest = getRestSec(item);
+  const entry = currentEntry();
+  const rest = getRestSecForEntry(entry, item);
   runState.activeRestSec = rest;
 
   if(rest <= 0){
@@ -242,16 +520,17 @@ function beginRestPhase(){
     return;
   }
 
-  const setNum = runState.set + 1;
-  const totalSets = Math.max(1, +item.sets || 1);
+  const setNum = entry?.set || 1;
+  const totalSets = entry?.totalSets || Math.max(1, +item.sets || 1);
 
   const chipsHtml = [
     chip(`Rest`),
-    chip(`Set ${setNum}/${totalSets}`)
+    chip(`${entry?.isCircuit ? "Round" : "Set"} ${setNum}/${totalSets}`)
   ].join("");
 
   setRunnerUI(item.name, "Recover, then continue.", "Rest", rest, chipsHtml);
   $("#completeSet").disabled = true;
+  setLogVisibility(false);
 
   if(draft.autoStartRest){
     startCountdown(rest, () => advanceAfterRest());
@@ -263,42 +542,38 @@ function beginRestPhase(){
 }
 
 function advanceAfterRest(){
-  const item = currentItem();
-  if(!item){
+  if(!runState) return;
+  if(runState.queueIndex + 1 >= runState.queue.length){
     finishWorkout();
     return;
   }
-  const totalSets = Math.max(1, +item.sets || 1);
-
-  if(runState.set + 1 < totalSets){
-    runState.set += 1;
-    runState.phase = "work";
-    beginWorkPhase();
-  } else {
-    runState.idx += 1;
-    runState.set = 0;
-    runState.phase = "work";
-    beginWorkPhase();
-  }
+  runState.queueIndex += 1;
+  runState.phase = "work";
+  beginWorkPhase();
 }
 
 function completeSetInternal(){
   // called for rep-based via click, or timed when countdown ends
+  captureSetLog();
   runState.phase = "rest";
   beginRestPhase();
 }
 
 function finishWorkout(){
   clearIntervalSafe();
+  setLogVisibility(false);
+  const logs = runState?.logs || [];
   runState = null;
   setRunnerButtons(false);
   setRunnerUI("Workout complete", "Nice work. You can edit and start again.", "Done", 0, chip("Complete"));
   $("#timerValue").textContent = "00:00";
   $("#completeSet").disabled = true;
+  renderSummary(logs);
 }
 
 function stopWorkout(){
   clearIntervalSafe();
+  setLogVisibility(false);
   runState = null;
   setRunnerButtons(false);
   setRunnerUI("Stopped", "Workout stopped. Edit your plan or press Start to run again.", "Stopped", 0, chip("Stopped"));
@@ -308,11 +583,46 @@ function stopWorkout(){
 
 // ----------------- Events -----------------
 render();
+setLogVisibility(false);
 
 // Top controls
 $("#workoutName").addEventListener("input", () => { updateDraftFromTopControls(); });
 $("#globalRest").addEventListener("change", () => { updateDraftFromTopControls(); render(); });
 $("#autoStartRest").addEventListener("change", () => { updateDraftFromTopControls(); });
+
+$("#loadWorkout").addEventListener("click", () => {
+  const select = $("#savedWorkoutSelect");
+  const idx = select?.value;
+  if(idx === "" || idx === null || idx === undefined) return;
+  const saved = loadSavedWorkouts();
+  const chosen = saved[Number(idx)];
+  if(!chosen) return;
+  draft = {
+    name: typeof chosen.name === "string" ? chosen.name : "",
+    globalRestSec: Number.isFinite(+chosen.globalRestSec) ? Math.max(0, +chosen.globalRestSec) : 60,
+    autoStartRest: chosen.autoStartRest !== false,
+    items: Array.isArray(chosen.items) ? chosen.items : [],
+    blocks: Array.isArray(chosen.blocks) ? chosen.blocks : [],
+  };
+  saveDraft(draft);
+  stopWorkout();
+  render();
+});
+
+$("#addBlock").addEventListener("click", () => {
+  if(!Array.isArray(draft.blocks)) draft.blocks = [];
+  const nextIndex = draft.blocks.length + 1;
+  draft.blocks.push({
+    id: uid(),
+    name: `Block ${nextIndex}`,
+    rounds: 3,
+    isCircuit: false,
+    restOverrideEnabled: false,
+    restSec: 60,
+  });
+  saveDraft(draft);
+  render();
+});
 
 // Builder list event delegation
 $("#workoutList").addEventListener("change", (e) => {
@@ -333,6 +643,7 @@ $("#workoutList").addEventListener("change", (e) => {
   if(field === "isTimed") item.isTimed = (val === "true");
   if(field === "restOverrideEnabled") item.restOverrideEnabled = (val === "true");
   if(field === "restSec") item.restSec = Math.max(0, parseInt(val || "0", 10));
+  if(field === "blockId") item.blockId = val || "";
 
   saveDraft(draft);
   render(); // rerender to update labels / disabled states
@@ -364,9 +675,45 @@ $("#workoutList").addEventListener("click", (e) => {
   render();
 });
 
+$("#blockList").addEventListener("change", (e) => {
+  const row = e.target.closest("[data-block]");
+  if(!row) return;
+  const blockId = row.getAttribute("data-block");
+  const block = draft.blocks.find(b => b.id === blockId);
+  if(!block) return;
+  const field = e.target.getAttribute("data-block-field");
+  if(!field) return;
+
+  if(field === "name") block.name = e.target.value.trim();
+  if(field === "rounds") block.rounds = Math.max(1, parseInt(e.target.value || "1", 10));
+  if(field === "isCircuit") block.isCircuit = (e.target.value === "true");
+  if(field === "restOverrideEnabled") block.restOverrideEnabled = (e.target.value === "true");
+  if(field === "restSec") block.restSec = Math.max(0, parseInt(e.target.value || "0", 10));
+
+  saveDraft(draft);
+  render();
+});
+
+$("#blockList").addEventListener("click", (e) => {
+  const btn = e.target.closest("[data-block-action]");
+  if(!btn) return;
+  const row = e.target.closest("[data-block]");
+  if(!row) return;
+  const blockId = row.getAttribute("data-block");
+  const action = btn.getAttribute("data-block-action");
+  if(action !== "remove") return;
+
+  draft.blocks = draft.blocks.filter(b => b.id !== blockId);
+  draft.items.forEach((item) => {
+    if(item.blockId === blockId) item.blockId = "";
+  });
+  saveDraft(draft);
+  render();
+});
+
 // Clear / Save / Start
 $("#clearWorkout").addEventListener("click", () => {
-  draft = { name:"", globalRestSec:60, autoStartRest:true, items:[] };
+  draft = { name:"", globalRestSec:60, autoStartRest:true, items:[], blocks:[] };
   saveDraft(draft);
   stopWorkout();
   render();
@@ -378,6 +725,7 @@ $("#saveWorkout").addEventListener("click", () => {
   const payload = { ...draft, savedAt: new Date().toISOString() };
   saved.unshift(payload);
   saveSavedWorkouts(saved.slice(0, 20));
+  renderSavedWorkouts();
   $("#saveWorkout").textContent = "Saved";
   setTimeout(() => $("#saveWorkout").textContent = "Save", 900);
 });
@@ -386,9 +734,16 @@ $("#startWorkout").addEventListener("click", () => {
   updateDraftFromTopControls();
   if(draft.items.length === 0) return;
 
-  runState = { phase: "work", idx: 0, set: 0, remainingSec: 0, intervalId: null, paused: false, activeRestSec: 0 };
+  const queue = buildRunQueue();
+  if(queue.length === 0) return;
+  runState = { phase: "work", queueIndex: 0, remainingSec: 0, intervalId: null, paused: false, activeRestSec: 0, queue, logs: [] };
   setRunnerButtons(true);
   $("#pauseResume").textContent = "Pause";
+  const summary = $("#runSummary");
+  const summaryBody = $("#runSummaryBody");
+  if(summary) summary.hidden = true;
+  if(summaryBody) summaryBody.innerHTML = "";
+  openRunModal();
   beginWorkPhase();
 });
 
@@ -422,3 +777,9 @@ $("#skip").addEventListener("click", () => {
 });
 
 $("#stop").addEventListener("click", () => stopWorkout());
+
+document.addEventListener("click", (e) => {
+  const closeBtn = e.target.closest("[data-action=\"closeRun\"]");
+  if(!closeBtn) return;
+  closeRunModal();
+});
