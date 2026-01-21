@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Muscle Groups Exercise Library</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="brand-title">Exercise Library</div>
+        <div class="brand-sub">Browse by muscle group or search any exercise.</div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="index.html" aria-current="page">Home</a>
+        <a class="navlink" href="back-pain.html">Back Pain Relief</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="panel-head">
+        <h1 class="h1">Find an exercise</h1>
+        <p class="muted">Search across the entire library. Results update as you type.</p>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label for="q" class="label">Search</label>
+          <input id="q" class="input" type="search" placeholder="e.g., overhead press, squat, row" autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="tag" class="label">Filter by tag</label>
+          <select id="tag" class="select">
+            <option value="">All</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="group" class="label">Filter by group</label>
+          <select id="group" class="select">
+            <option value="">All</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="results-meta">
+        <div id="count" class="muted"></div>
+        <div class="hint muted">Tip: Click a group card below to browse within that category.</div>
+      </div>
+
+      <div id="results" class="grid"></div>
+    </section>
+
+    <section class="panel">
+      <div class="panel-head">
+        <h2 class="h2">Muscle groups</h2>
+        <p class="muted">Select a group to view exercises and search within that group.</p>
+      </div>
+
+      <div id="groupCards" class="cards"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap muted">Static site package. Edit <code>js/data-exercises.js</code> to add exercises.</div>
+  </footer>
+
+  <script type="module" src="js/app-home.js"></script>
+</body>
+</html>

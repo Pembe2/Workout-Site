@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Exercises</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="brand-title" id="pageTitle">Exercises</div>
+        <div class="brand-sub" id="pageSub">Browse and search within a muscle group.</div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="index.html">Home</a>
+        <a class="navlink" href="back-pain.html">Back Pain Relief</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="panel-head">
+        <h1 class="h1" id="groupHeading">Group</h1>
+        <p class="muted" id="groupDesc">Search within this group. Results update as you type.</p>
+      </div>
+
+      <div class="controls">
+        <div class="field">
+          <label for="q" class="label">Search within group</label>
+          <input id="q" class="input" type="search" placeholder="Search this group..." autocomplete="off">
+        </div>
+
+        <div class="field">
+          <label for="tag" class="label">Filter by tag</label>
+          <select id="tag" class="select">
+            <option value="">All</option>
+          </select>
+        </div>
+
+        <div class="field">
+          <label for="groupJump" class="label">Jump to another group</label>
+          <select id="groupJump" class="select">
+            <option value="">Select…</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="results-meta">
+        <div id="count" class="muted"></div>
+        <div class="hint muted"><a href="index.html">Global search</a> is available on the home page.</div>
+      </div>
+
+      <div id="results" class="grid"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap muted">Edit <code>js/data-exercises.js</code> to add more exercises.</div>
+  </footer>
+
+  <script type="module" src="js/app-category.js"></script>
+</body>
+</html>
