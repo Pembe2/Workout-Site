@@ -1,3 +1,8 @@
+// NOTE FOR AI TOOLS:
+// This project follows the architecture documented in /ARCHITECTURE.md and /CODEX_CONTEXT.md.
+// Do not duplicate data sources or bypass the single source of truth in js/data-exercises.js.
+// Prefer making changes that preserve existing patterns and storage keys.
+
 // Expanded exercise library (15 exercises per group).
 // Edit this file to add, remove, or modify exercises.
 

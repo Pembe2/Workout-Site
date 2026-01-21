@@ -122,3 +122,96 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .controls{ grid-template-columns: 1fr; }
   .hint{ text-align:left; }
 }
+
+
+/* Buttons */
+.btn{
+  appearance:none;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.04);
+  color: var(--text);
+  padding: 10px 12px;
+  border-radius: 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.btn:hover{ border-color: var(--chipLine); background: rgba(122,162,255,.08); }
+.btn:disabled{ opacity:.55; cursor:not-allowed; }
+.btn.primary{ border-color: rgba(122,162,255,.55); background: rgba(122,162,255,.16); }
+.btn.primary:hover{ background: rgba(122,162,255,.22); }
+.btn.secondary{ }
+.btn.danger{ border-color: rgba(255,107,107,.45); background: rgba(255,107,107,.12); }
+.btn.danger:hover{ background: rgba(255,107,107,.18); }
+.small{ font-size:12px; }
+
+/* Workout builder layout */
+.builder-toolbar{
+  display:grid;
+  grid-template-columns: 2fr 1fr 1fr auto;
+  gap:12px;
+  align-items:end;
+  margin-top: 14px;
+}
+.toolbar-actions{
+  display:flex;
+  gap:10px;
+  justify-content:flex-end;
+}
+.builder-grid{
+  display:grid;
+  grid-template-columns: 1.15fr .85fr;
+  gap: 14px;
+  margin-top: 16px;
+}
+
+.item{
+  background: rgba(0,0,0,.14);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:14px;
+}
+.item-head{
+  display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
+}
+.item-title{ font-weight:700; }
+.item-controls{
+  display:grid;
+  grid-template-columns: repeat(4, minmax(0,1fr));
+  gap:10px;
+  margin-top: 10px;
+}
+.item-controls .field{ gap:6px; }
+.item-actions{
+  display:flex;
+  gap:10px;
+  margin-top: 10px;
+  justify-content:flex-end;
+}
+
+/* Runner */
+.runner-panel{ padding:16px; }
+.runner-top{ display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
+.runner-title{ font-weight:800; font-size:18px; }
+.runner-sub{ font-size:13px; margin-top:2px; }
+.timer{
+  margin-top: 14px;
+  padding: 14px;
+  border-radius: 18px;
+  border:1px solid var(--line);
+  background: rgba(255,255,255,.03);
+  text-align:center;
+}
+.timer-value{ font-size:42px; font-weight:800; letter-spacing:.5px; }
+.timer-label{ margin-top:4px; font-size:13px; }
+.runner-actions{
+  display:flex;
+  gap:10px;
+  flex-wrap:wrap;
+  margin-top: 12px;
+}
+
+@media (max-width: 980px){
+  .builder-toolbar{ grid-template-columns: 1fr; }
+  .builder-grid{ grid-template-columns: 1fr; }
+  .item-controls{ grid-template-columns: repeat(2, minmax(0,1fr)); }
+}
