@@ -168,13 +168,6 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   border-bottom:1px solid var(--line);
   backdrop-filter: blur(8px);
 }
-.topbar.compact .topbar-inner{
-  padding:8px 16px;
-}
-.topbar.compact .brand,
-.topbar.compact .theme-control{
-  display:none;
-}
 .topbar-inner{
   display:flex;
   flex-direction:column;
@@ -215,6 +208,66 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   align-items:center;
   gap:8px;
   flex-wrap:wrap;
+}
+.theme-trigger{
+  padding:6px 10px;
+  border-radius:999px;
+  line-height:1;
+  font-size:12px;
+}
+.theme-sheet{
+  position:fixed;
+  inset:0;
+  display:none;
+  z-index:120;
+}
+.theme-sheet.is-open{ display:block; }
+.theme-sheet-backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(5,8,12,.55);
+}
+.theme-sheet-panel{
+  position:absolute;
+  right:12px;
+  top:56px;
+  width: 260px;
+  max-height: 60vh;
+  overflow:auto;
+  padding-bottom:24px;
+  padding:16px;
+  border-radius:16px;
+  background: linear-gradient(180deg, var(--panel), var(--panel2));
+  border-top:1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.theme-sheet-head{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:12px;
+}
+.theme-sheet-list{
+  display:grid;
+  grid-template-columns: 1fr 1fr;
+  gap:10px;
+}
+.theme-option{
+  border:1px solid var(--line);
+  border-radius:12px;
+  padding:10px;
+  background: var(--surface3);
+  text-align:left;
+  font-size:13px;
+  cursor:pointer;
+}
+.theme-option.is-active{
+  border-color: var(--chipLine);
+  background: var(--accentSoft);
+}
+@media (min-width: 721px){
+  .theme-trigger{ display:none; }
 }
 .theme-label{
   font-size:12px;
@@ -574,6 +627,34 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 
 @media (max-width: 720px){
+  .topbar-inner{
+    padding:6px 12px;
+    gap:6px;
+    flex-direction:row;
+    align-items:center;
+    justify-content:space-between;
+  }
+  .brand,
+  .theme-control{
+    display:none;
+  }
+  .nav{
+    width:auto;
+    flex:1;
+  }
+  .theme-trigger{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+  }
+  .nav{
+    padding-bottom:0;
+    gap:6px;
+  }
+  .navlink{
+    padding:6px 10px;
+    font-size:12px;
+  }
   .run-modal-panel{
     margin: 18px 12px;
     max-height: calc(100vh - 36px);

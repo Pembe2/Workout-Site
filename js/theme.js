@@ -49,21 +49,64 @@
     });
   }
 
-  const topbar = document.querySelector(".topbar");
-  let isCompact = false;
-  const onScroll = () => {
-    if (!topbar) return;
-    const y = window.scrollY;
-    if (!isCompact && y > 140) {
-      isCompact = true;
-      topbar.classList.add("compact");
-      return;
-    }
-    if (isCompact && y < 60) {
-      isCompact = false;
-      topbar.classList.remove("compact");
-    }
-  };
-  onScroll();
-  window.addEventListener("scroll", onScroll, { passive: true });
+  const trigger = document.getElementById("themeTrigger");
+  if (select && trigger) {
+    const sheet = document.createElement("div");
+    sheet.className = "theme-sheet";
+    sheet.setAttribute("aria-hidden", "true");
+    sheet.innerHTML = `
+      <div class="theme-sheet-backdrop" data-action="closeTheme"></div>
+      <div class="theme-sheet-panel" role="dialog" aria-modal="true" aria-label="Choose theme">
+        <div class="theme-sheet-head">
+          <div class="runner-title">Choose theme</div>
+          <button class="btn secondary" type="button" data-action="closeTheme">Close</button>
+        </div>
+        <div class="theme-sheet-list" id="themeSheetList"></div>
+      </div>
+    `;
+    document.body.appendChild(sheet);
+
+    const openSheet = () => {
+      sheet.classList.add("is-open");
+      sheet.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
+      renderOptions();
+    };
+    const closeSheet = () => {
+      sheet.classList.remove("is-open");
+      sheet.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("modal-open");
+    };
+
+    const renderOptions = () => {
+      const list = sheet.querySelector("#themeSheetList");
+      const options = Array.from(select.options).map((opt) => ({
+        value: opt.value,
+        label: opt.textContent || opt.value,
+      }));
+      list.innerHTML = options.map((opt) => `
+        <button class="theme-option ${opt.value === select.value ? "is-active" : ""}" type="button" data-value="${opt.value}">
+          ${opt.label}
+        </button>
+      `).join("");
+    };
+
+    trigger.addEventListener("click", openSheet);
+    sheet.addEventListener("click", (e) => {
+      const closeBtn = e.target.closest("[data-action=\"closeTheme\"]");
+      if (closeBtn) {
+        closeSheet();
+        return;
+      }
+      const optionBtn = e.target.closest("[data-value]");
+      if (optionBtn) {
+        const value = optionBtn.getAttribute("data-value");
+        select.value = value;
+        applyTheme(value);
+        renderOptions();
+      }
+    });
+  }
+
+  // Header sizing is handled by CSS for mobile; no scroll collapse.
 })();

@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en" data-theme="sunlit">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mobility</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="wrap topbar-inner">
+      <div class="brand">
+        <div class="brand-title">Mobility</div>
+        <div class="brand-sub">Pick an area, then browse drills and stretches to improve comfort and range of motion.</div>
+      </div>
+      <nav class="nav">
+        <a class="navlink" href="index.html">Home</a>
+        <a class="navlink" href="mobility.html" aria-current="page">Mobility</a>
+        <a class="navlink" href="workout.html">Workout Builder</a>
+      </nav>
+      <button class="btn secondary theme-trigger" id="themeTrigger" type="button" title="Theme settings" aria-label="Theme settings">⚙️</button>
+      <div class="theme-control">
+        <label class="theme-label" for="themeSelect">Theme</label>
+        <select id="themeSelect" class="select theme-select">
+          <option value="sunlit">Sunlit</option>
+          <option value="citrus">Citrus</option>
+          <option value="sky">Sky</option>
+          <option value="midnight">Midnight</option>
+          <option value="forest">Forest</option>
+          <option value="charcoal">Charcoal</option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="panel">
+      <div class="panel-head">
+        <h1 class="h1">Mobility areas</h1>
+        <p class="muted">Start with the area that feels restricted or uncomfortable. Then choose a few drills to run 5-10 minutes daily.</p>
+      </div>
+
+      <div class="builder-toolbar" style="grid-template-columns: 2fr 1fr auto;">
+        <div class="field">
+          <label class="label" for="q">Search mobility drills</label>
+          <input id="q" class="input" type="search" placeholder="e.g., thoracic, hip flexor, cat-cow">
+          <div class="muted small">Searches across all mobility areas. Leave blank to browse by area.</div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="area">Area filter</label>
+          <select id="area" class="select">
+            <option value="">All areas</option>
+          </select>
+          <div class="muted small">Optional filter for search results.</div>
+        </div>
+
+        <div class="toolbar-actions" style="justify-content:flex-start;">
+          <button id="clear" class="btn secondary" type="button">Clear</button>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <div class="muted small">Areas</div>
+        <div id="areaCards" class="grid cards" style="margin-top:10px;"></div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <div class="muted small">Results</div>
+        <div id="results" class="stack" style="margin-top:10px;"></div>
+      </div>
+
+      <div style="margin-top:18px;">
+        <div class="muted small">Area detail</div>
+        <div id="areaSections" class="stack" style="margin-top:10px;"></div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap muted">Mobility content is informational and not medical advice. Stop if pain increases or you feel sharp or nerve-like symptoms.</div>
+  </footer>
+
+  <script src="js/theme.js"></script>
+  <script type="module" src="js/app-mobility.js"></script>
+</body>
+</html>
