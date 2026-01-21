@@ -75,23 +75,23 @@
 
 :root[data-theme="midnight"]{
   color-scheme: dark;
-  --bg:#0b0712;
-  --bg2:#130a1f;
-  --panel:#1a1027;
-  --panel2:#120a1b;
-  --text:#efe7fb;
-  --muted:#b5a5c6;
+  --bg:#08040f;
+  --bg2:#12081f;
+  --panel:#12081f;
+  --panel2:#0d0618;
+  --text:#f2e9ff;
+  --muted:#a895c8;
   --line:rgba(239,231,251,.14);
   --accent:#260656;
-  --accent2:#4b138f;
+  --accent2:#3b0b7a;
   --focus:rgba(38,6,86,.38);
-  --chip:#241335;
+  --chip:#150a24;
   --chipLine:rgba(38,6,86,.5);
   --shadow:0 16px 40px rgba(0,0,0,.5);
-  --topbar:rgba(11,7,18,.92);
-  --surface:rgba(24,14,36,.82);
-  --surface2:rgba(24,14,36,.74);
-  --surface3:rgba(24,14,36,.9);
+  --topbar:rgba(8,4,15,.94);
+  --surface:rgba(14,7,26,.88);
+  --surface2:rgba(14,7,26,.8);
+  --surface3:rgba(14,7,26,.94);
   --accentSoft:rgba(38,6,86,.22);
   --accentSoftHover:rgba(38,6,86,.34);
   --accentSoftBorder:rgba(38,6,86,.7);
