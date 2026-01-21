@@ -82,19 +82,19 @@
   --text:#efe7fb;
   --muted:#b5a5c6;
   --line:rgba(239,231,251,.14);
-  --accent:#7a3cff;
-  --accent2:#c06bff;
-  --focus:rgba(122,60,255,.35);
+  --accent:#260656;
+  --accent2:#4b138f;
+  --focus:rgba(38,6,86,.38);
   --chip:#241335;
-  --chipLine:rgba(122,60,255,.42);
+  --chipLine:rgba(38,6,86,.5);
   --shadow:0 16px 40px rgba(0,0,0,.5);
   --topbar:rgba(11,7,18,.92);
   --surface:rgba(24,14,36,.82);
   --surface2:rgba(24,14,36,.74);
   --surface3:rgba(24,14,36,.9);
-  --accentSoft:rgba(122,60,255,.18);
-  --accentSoftHover:rgba(122,60,255,.28);
-  --accentSoftBorder:rgba(122,60,255,.6);
+  --accentSoft:rgba(38,6,86,.22);
+  --accentSoftHover:rgba(38,6,86,.34);
+  --accentSoftBorder:rgba(38,6,86,.7);
 }
 
 :root[data-theme="forest"]{
