@@ -7,6 +7,7 @@ import { GROUPS, TAGS, EXERCISES } from "./data-exercises.js";
 
 const WORKOUT_KEY = "WORKOUT_BUILDER_V1";
 const SAVED_WORKOUTS_KEY = "WORKOUT_SAVED_V1";
+const LAST_PERF_KEY = "WORKOUT_LAST_PERF_V1";
 
 const $ = (sel) => document.querySelector(sel);
 
@@ -21,13 +22,15 @@ function safeParse(jsonStr, fallback){
 
 function loadDraft(){
   const d = safeParse(localStorage.getItem(WORKOUT_KEY), null);
-  if(!d || typeof d !== "object") return { name:"", globalRestSec:60, autoStartRest:true, items:[], blocks:[] };
+  if(!d || typeof d !== "object") return { name:"", globalRestSec:60, autoStartRest:true, items:[] };
   return {
     name: typeof d.name === "string" ? d.name : "",
     globalRestSec: Number.isFinite(+d.globalRestSec) ? Math.max(0, +d.globalRestSec) : 60,
     autoStartRest: d.autoStartRest !== false,
-    items: Array.isArray(d.items) ? d.items : [],
-    blocks: Array.isArray(d.blocks) ? d.blocks : [],
+    items: Array.isArray(d.items) ? d.items.map((item) => ({
+      ...item,
+      circuitWithNext: !!item.circuitWithNext,
+    })) : [],
   };
 }
 
@@ -42,6 +45,85 @@ function loadSavedWorkouts(){
 
 function saveSavedWorkouts(arr){
   localStorage.setItem(SAVED_WORKOUTS_KEY, JSON.stringify(arr));
+}
+
+function loadLastPerf(){
+  const obj = safeParse(localStorage.getItem(LAST_PERF_KEY), {});
+  return obj && typeof obj === "object" ? obj : {};
+}
+
+function saveLastPerf(map){
+  localStorage.setItem(LAST_PERF_KEY, JSON.stringify(map));
+}
+
+function seedSavedWorkouts(){
+  const existing = loadSavedWorkouts();
+  if(existing.length > 0) return;
+
+  const makeItem = (name, sets, reps, weight = "", isTimed = false, durationSec = 45) => ({
+    uid: uid(),
+    exerciseId: name.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+    name,
+    group: "custom",
+    circuitWithNext: false,
+    weight,
+    sets,
+    reps,
+    isTimed,
+    durationSec,
+    restOverrideEnabled: false,
+    restSec: 60,
+  });
+
+  const now = new Date().toISOString();
+  const seed = [
+    {
+      name: "Push (Barbell/Dumbbell)",
+      globalRestSec: 60,
+      autoStartRest: true,
+      savedAt: now,
+      items: [
+        makeItem("Barbell Bench Press", 4, 8),
+        makeItem("Barbell Incline Press", 3, 10),
+        makeItem("Barbell Overhead Press", 3, 10),
+        makeItem("Dumbbell Lateral Raise", 3, 15),
+        makeItem("Dumbbell Chest Fly", 3, 12),
+        makeItem("Barbell Close-Grip Bench Press", 3, 10),
+        makeItem("Dumbbell Overhead Triceps Extension", 3, 12),
+      ],
+    },
+    {
+      name: "Pull (Cable Focus)",
+      globalRestSec: 60,
+      autoStartRest: true,
+      savedAt: now,
+      items: [
+        makeItem("Lat Pulldown", 4, 10),
+        makeItem("Seated Cable Row", 4, 10),
+        makeItem("Dumbbell Bent-Over Row", 3, 10),
+        makeItem("Cable Face Pull", 3, 15),
+        makeItem("Dumbbell Chest-Supported Row", 3, 10),
+        makeItem("Barbell Curl", 3, 12),
+        makeItem("Cable Curl", 3, 15),
+      ],
+    },
+    {
+      name: "Lower Body (Barbell/Dumbbell)",
+      globalRestSec: 60,
+      autoStartRest: true,
+      savedAt: now,
+      items: [
+        makeItem("Barbell Back Squat", 4, 8),
+        makeItem("Barbell Romanian Deadlift", 3, 10),
+        makeItem("Dumbbell Walking Lunge", 3, 12),
+        makeItem("Hip Thrust", 3, 12),
+        makeItem("Dumbbell Step-up", 3, 10),
+        makeItem("Dumbbell Calf Raise", 4, 15),
+      ],
+    },
+  ];
+
+  saveSavedWorkouts(seed);
 }
 
 function fmtTime(sec){
@@ -84,8 +166,11 @@ function resetSetLogInputs(item){
   const repsEl = $("#runReps");
   const weightEl = $("#runWeight");
   const notesEl = $("#runNotes");
+  const last = runState?.lastInputs?.[item?.uid] || null;
+  const plannedReps = item?.isTimed ? "" : String(Math.max(1, +item?.reps || 10));
+  const plannedWeight = item?.weight || "";
   if(repsEl){
-    repsEl.value = "";
+    repsEl.value = last?.reps ?? plannedReps;
     if(item?.isTimed){
       repsEl.placeholder = "Optional";
     } else {
@@ -93,8 +178,8 @@ function resetSetLogInputs(item){
       repsEl.placeholder = `Target: ${reps}`;
     }
   }
-  if(weightEl) weightEl.value = "";
-  if(notesEl) notesEl.value = "";
+  if(weightEl) weightEl.value = last?.weight ?? plannedWeight;
+  if(notesEl) notesEl.value = last?.notes ?? "";
 }
 
 function captureSetLog(){
@@ -102,6 +187,7 @@ function captureSetLog(){
   const item = currentItem();
   if(!item) return;
   if(!Array.isArray(runState.logs)) runState.logs = [];
+  if(!runState.lastInputs) runState.lastInputs = {};
 
   const repsVal = $("#runReps")?.value?.trim();
   const weightVal = $("#runWeight")?.value?.trim();
@@ -120,6 +206,21 @@ function captureSetLog(){
     weight: weightVal || "",
     notes: notesVal || ""
   });
+
+  runState.lastInputs[item.uid] = {
+    reps: repsVal || "",
+    weight: weightVal || "",
+    notes: notesVal || ""
+  };
+
+  if(repsVal || weightVal){
+    const perf = loadLastPerf();
+    perf[item.exerciseId] = {
+      reps: repsVal || "",
+      weight: weightVal || ""
+    };
+    saveLastPerf(perf);
+  }
 }
 
 function renderSummary(logs){
@@ -180,7 +281,6 @@ function render(){
   $("#globalRest").value = draft.globalRestSec ?? 60;
   $("#autoStartRest").value = draft.autoStartRest ? "yes" : "no";
   renderSavedWorkouts();
-  renderBlocks();
 
   const list = $("#workoutList");
   const empty = $("#emptyState");
@@ -189,23 +289,53 @@ function render(){
     empty.style.display = "block";
   } else {
     empty.style.display = "none";
-    list.innerHTML = draft.items.map(renderItem).join("");
+    list.innerHTML = renderWorkoutList();
   }
 }
 
-function renderItem(item){
+function renderWorkoutList(){
+  const items = draft.items;
+  let html = "";
+  let i = 0;
+
+  while(i < items.length){
+    const chainIndexes = [i];
+    while(i < items.length - 1 && items[i].circuitWithNext){
+      i += 1;
+      chainIndexes.push(i);
+    }
+
+    if(chainIndexes.length > 1){
+      const chainHtml = chainIndexes.map((idx) => renderItem(items[idx], idx, items.length)).join("");
+      html += `
+        <div class="circuit-group">
+          <div class="circuit-label">Circuit</div>
+          ${chainHtml}
+        </div>
+      `;
+    } else {
+      html += renderItem(items[i], i, items.length);
+    }
+    i += 1;
+  }
+
+  return html;
+}
+
+function renderItem(item, idx, total){
   const ex = EXERCISES.find(x => x.id === item.exerciseId);
   const groupLabel = GROUPS.find(g => g.id === (ex?.group || item.group))?.label || item.group || "Group";
   const tags = (ex?.tags || []).map(t => TAGS.find(x => x.id === t)?.label || t);
-  const block = draft.blocks.find(b => b.id === item.blockId);
-  const blockLabel = block ? block.name : "";
-  const blockChips = block ? [blockLabel, block.isCircuit ? `Circuit ${block.rounds || 1}x` : "Block"] : [];
-  const headerChips = [groupLabel, ...tags, ...blockChips].filter(Boolean).map(chip).join("");
+  const headerChips = [groupLabel, ...tags].filter(Boolean).map(chip).join("");
+  const lastPerf = loadLastPerf()[item.exerciseId];
+  const repsValue = lastPerf?.reps ? lastPerf.reps : (item.reps ?? 10);
+  const weightValue = lastPerf?.weight ? lastPerf.weight : (item.weight ?? "");
 
   const isTimed = !!item.isTimed;
-  const isCircuit = !!block?.isCircuit;
-  const restEffective = getRestSec(item);
-  const restLabel = block?.restOverrideEnabled ? "Block rest" : (item.restOverrideEnabled ? "Item rest" : "Rest");
+  const restEffective = item.restOverrideEnabled ? item.restSec : draft.globalRestSec;
+  const restLabel = item.restOverrideEnabled ? "Item rest" : "Rest";
+  const isLast = idx === total - 1;
+  const circuitLabel = item.circuitWithNext ? "Circuit with below: On" : "Circuit with below";
 
   return `
     <div class="item" data-uid="${item.uid}">
@@ -222,8 +352,8 @@ function renderItem(item){
 
       <div class="item-controls">
         <div class="field">
-          <label class="label">${isCircuit ? "Rounds (from block)" : "Sets"}</label>
-          <input class="input" type="number" min="1" step="1" data-field="sets" value="${isCircuit ? (block?.rounds ?? 1) : (item.sets ?? 3)}" ${isCircuit ? "disabled" : ""}>
+          <label class="label">Sets</label>
+          <input class="input" type="number" min="1" step="1" data-field="sets" value="${item.sets ?? 3}">
         </div>
 
         <div class="field">
@@ -236,16 +366,15 @@ function renderItem(item){
 
         <div class="field">
           <label class="label">${isTimed ? "Duration (sec)" : "Reps"}</label>
-          <input class="input" type="number" min="1" step="1" data-field="${isTimed ? "durationSec" : "reps"}" value="${isTimed ? (item.durationSec ?? 45) : (item.reps ?? 10)}">
+          <input class="input" type="number" min="1" step="1" data-field="${isTimed ? "durationSec" : "reps"}" value="${isTimed ? (item.durationSec ?? 45) : repsValue}">
         </div>
 
         <div class="field">
-          <label class="label">Block</label>
-          <select class="select" data-field="blockId">
-            <option value="">None</option>
-            ${draft.blocks.map(b => `<option value="${b.id}" ${item.blockId === b.id ? "selected" : ""}>${b.name}${b.isCircuit ? " (Circuit)" : ""}</option>`).join("")}
-          </select>
+          <label class="label">Weight</label>
+          <input class="input" type="text" data-field="weight" value="${weightValue}" placeholder="e.g., 135 lb / 60 kg">
         </div>
+
+
 
         <div class="field">
           <label class="label">Rest override?</label>
@@ -264,6 +393,7 @@ function renderItem(item){
       <div class="item-actions">
         <button class="btn secondary" type="button" data-action="moveUp">Up</button>
         <button class="btn secondary" type="button" data-action="moveDown">Down</button>
+        <button class="btn secondary ${item.circuitWithNext ? "is-active" : ""}" type="button" data-action="toggleCircuit" aria-pressed="${item.circuitWithNext ? "true" : "false"}" ${isLast ? "disabled" : ""}>${circuitLabel}</button>
         <button class="btn danger" type="button" data-action="remove">Remove</button>
       </div>
     </div>
@@ -293,99 +423,6 @@ function renderSavedWorkouts(){
   select.value = "";
 }
 
-function renderBlocks(){
-  const list = $("#blockList");
-  if(!list) return;
-  if(!Array.isArray(draft.blocks) || draft.blocks.length === 0){
-    list.innerHTML = `<div class="muted">No blocks yet. Add one to group or circuit exercises.</div>`;
-    return;
-  }
-
-  list.innerHTML = draft.blocks.map((block) => `
-    <div class="block-row" data-block="${block.id}">
-      <div class="item-title">${block.name || "Untitled block"}</div>
-      <div class="block-controls">
-        <div class="field">
-          <label class="label">Name</label>
-          <input class="input" type="text" data-block-field="name" value="${block.name || ""}">
-        </div>
-        <div class="field">
-          <label class="label">Rounds</label>
-          <input class="input" type="number" min="1" step="1" data-block-field="rounds" value="${block.rounds ?? 3}">
-        </div>
-        <div class="field">
-          <label class="label">Circuit?</label>
-          <select class="select" data-block-field="isCircuit">
-            <option value="false" ${!block.isCircuit ? "selected" : ""}>No</option>
-            <option value="true" ${block.isCircuit ? "selected" : ""}>Yes</option>
-          </select>
-        </div>
-        <div class="field">
-          <label class="label">Rest override?</label>
-          <select class="select" data-block-field="restOverrideEnabled">
-            <option value="false" ${!block.restOverrideEnabled ? "selected" : ""}>Use item/default</option>
-            <option value="true" ${block.restOverrideEnabled ? "selected" : ""}>Override</option>
-          </select>
-        </div>
-        <div class="field" style="${block.restOverrideEnabled ? "" : "opacity:.55;"}">
-          <label class="label">Rest (sec)</label>
-          <input class="input" type="number" min="0" step="5" data-block-field="restSec" value="${block.restSec ?? 60}" ${block.restOverrideEnabled ? "" : "disabled"}>
-        </div>
-      </div>
-      <div class="item-actions">
-        <button class="btn danger" type="button" data-block-action="remove">Remove</button>
-      </div>
-    </div>
-  `).join("");
-}
-
-function buildRunQueue(){
-  const queue = [];
-  const blocks = Array.isArray(draft.blocks) ? draft.blocks : [];
-  const circuitBlocks = new Set(blocks.filter(b => b.isCircuit).map(b => b.id));
-  const handledCircuitBlocks = new Set();
-
-  for(const item of draft.items){
-    const blockId = item.blockId;
-    const block = blocks.find(b => b.id === blockId);
-    const isCircuit = blockId && circuitBlocks.has(blockId);
-
-    if(isCircuit){
-      if(handledCircuitBlocks.has(blockId)) continue;
-      handledCircuitBlocks.add(blockId);
-
-      const blockItems = draft.items.filter(i => i.blockId === blockId);
-      const rounds = Math.max(1, +block?.rounds || 1);
-      for(let round = 1; round <= rounds; round += 1){
-        for(const bItem of blockItems){
-          queue.push({
-            itemUid: bItem.uid,
-            set: round,
-            totalSets: rounds,
-            isCircuit: true,
-            blockId,
-            blockName: block?.name || "Circuit",
-          });
-        }
-      }
-      continue;
-    }
-
-    const sets = Math.max(1, +item.sets || 1);
-    for(let s = 1; s <= sets; s += 1){
-      queue.push({
-        itemUid: item.uid,
-        set: s,
-        totalSets: sets,
-        isCircuit: false,
-        blockId,
-        blockName: block?.name || "",
-      });
-    }
-  }
-
-  return queue;
-}
 
 // ----------------- Timer / Runner -----------------
 let runState = null; // { phase, queueIndex, remainingSec, intervalId, paused, activeRestSec, queue, logs }
@@ -428,32 +465,10 @@ function startCountdown(seconds, onDone){
 }
 
 function getRestSec(item){
-  const block = draft.blocks?.find(b => b.id === item.blockId);
-  if(block?.restOverrideEnabled){
-    return Math.max(0, +block.restSec || 0);
-  }
   if(item.restOverrideEnabled){
     return Math.max(0, +item.restSec || 0);
   }
   return Math.max(0, +draft.globalRestSec || 0);
-}
-
-function getRestSecForEntry(entry, item){
-  if(!entry || !item) return 0;
-  if(entry.isCircuit){
-    const next = runState?.queue?.[runState.queueIndex + 1];
-    const sameBlock = next?.isCircuit && next?.blockId && next.blockId === entry.blockId;
-    const sameRound = sameBlock && next?.set === entry.set;
-    if(sameRound){
-      return 0;
-    }
-    const block = draft.blocks?.find(b => b.id === entry.blockId);
-    if(block?.restOverrideEnabled){
-      return Math.max(0, +block.restSec || 0);
-    }
-    return Math.max(0, +draft.globalRestSec || 0);
-  }
-  return getRestSec(item);
 }
 
 function currentEntry(){
@@ -465,6 +480,67 @@ function currentItem(){
   const entry = currentEntry();
   if(!entry) return null;
   return draft.items.find(i => i.uid === entry.itemUid) || null;
+}
+
+function buildRunQueue(){
+  const queue = [];
+  const items = draft.items;
+  let i = 0;
+
+  while(i < items.length){
+    const chain = [items[i]];
+    while(i < items.length - 1 && items[i].circuitWithNext){
+      i += 1;
+      chain.push(items[i]);
+    }
+
+    if(chain.length > 1){
+      const rounds = Math.max(...chain.map((item) => Math.max(1, +item.sets || 1)));
+      for(let round = 1; round <= rounds; round += 1){
+        for(const item of chain){
+          const sets = Math.max(1, +item.sets || 1);
+          if(round <= sets){
+            queue.push({
+              itemUid: item.uid,
+              set: round,
+              totalSets: rounds,
+              isCircuit: true,
+              round,
+              rounds,
+              chainId: chain[0].uid,
+            });
+          }
+        }
+      }
+    } else {
+      const sets = Math.max(1, +items[i].sets || 1);
+      for(let s = 1; s <= sets; s += 1){
+        queue.push({
+          itemUid: items[i].uid,
+          set: s,
+          totalSets: sets,
+          isCircuit: false,
+        });
+      }
+    }
+
+    i += 1;
+  }
+
+  return queue;
+}
+
+function getRestSecForEntry(entry, item){
+  if(!entry || !item) return 0;
+  if(entry.isCircuit){
+    const next = runState?.queue?.[runState.queueIndex + 1];
+    const sameChain = next?.isCircuit && next?.chainId === entry.chainId;
+    const sameRound = sameChain && next?.round === entry.round;
+    if(sameRound){
+      return 0;
+    }
+  }
+  return getRestSec(item);
 }
 
 function beginWorkPhase(){
@@ -482,7 +558,7 @@ function beginWorkPhase(){
     chip(GROUPS.find(g => g.id === (ex?.group || item.group))?.label || "Group"),
     chip(`Step ${runState.queueIndex + 1}/${runState.queue.length}`),
     chip(`${entry?.isCircuit ? "Round" : "Set"} ${setNum}/${totalSets}`),
-    entry?.isCircuit ? chip(entry.blockName || "Circuit") : ""
+    entry?.isCircuit ? chip("Circuit") : ""
   ].join("");
 
   setLogVisibility(true);
@@ -582,6 +658,7 @@ function stopWorkout(){
 }
 
 // ----------------- Events -----------------
+seedSavedWorkouts();
 render();
 setLogVisibility(false);
 
@@ -602,27 +679,24 @@ $("#loadWorkout").addEventListener("click", () => {
     globalRestSec: Number.isFinite(+chosen.globalRestSec) ? Math.max(0, +chosen.globalRestSec) : 60,
     autoStartRest: chosen.autoStartRest !== false,
     items: Array.isArray(chosen.items) ? chosen.items : [],
-    blocks: Array.isArray(chosen.blocks) ? chosen.blocks : [],
   };
   saveDraft(draft);
   stopWorkout();
   render();
 });
 
-$("#addBlock").addEventListener("click", () => {
-  if(!Array.isArray(draft.blocks)) draft.blocks = [];
-  const nextIndex = draft.blocks.length + 1;
-  draft.blocks.push({
-    id: uid(),
-    name: `Block ${nextIndex}`,
-    rounds: 3,
-    isCircuit: false,
-    restOverrideEnabled: false,
-    restSec: 60,
-  });
-  saveDraft(draft);
-  render();
+$("#deleteWorkout").addEventListener("click", () => {
+  const select = $("#savedWorkoutSelect");
+  const idx = select?.value;
+  if(idx === "" || idx === null || idx === undefined) return;
+  const saved = loadSavedWorkouts();
+  const index = Number(idx);
+  if(!Number.isFinite(index) || index < 0 || index >= saved.length) return;
+  saved.splice(index, 1);
+  saveSavedWorkouts(saved);
+  renderSavedWorkouts();
 });
+
 
 // Builder list event delegation
 $("#workoutList").addEventListener("change", (e) => {
@@ -643,7 +717,7 @@ $("#workoutList").addEventListener("change", (e) => {
   if(field === "isTimed") item.isTimed = (val === "true");
   if(field === "restOverrideEnabled") item.restOverrideEnabled = (val === "true");
   if(field === "restSec") item.restSec = Math.max(0, parseInt(val || "0", 10));
-  if(field === "blockId") item.blockId = val || "";
+  if(field === "weight") item.weight = val;
 
   saveDraft(draft);
   render(); // rerender to update labels / disabled states
@@ -659,7 +733,11 @@ $("#workoutList").addEventListener("click", (e) => {
   if(idx < 0) return;
 
   const action = btn.getAttribute("data-action");
-  if(action === "remove"){
+  if(action === "toggleCircuit"){
+    if(idx < draft.items.length - 1){
+      draft.items[idx].circuitWithNext = !draft.items[idx].circuitWithNext;
+    }
+  } else if(action === "remove"){
     draft.items.splice(idx, 1);
   } else if(action === "moveUp" && idx > 0){
     const tmp = draft.items[idx-1];
@@ -675,45 +753,10 @@ $("#workoutList").addEventListener("click", (e) => {
   render();
 });
 
-$("#blockList").addEventListener("change", (e) => {
-  const row = e.target.closest("[data-block]");
-  if(!row) return;
-  const blockId = row.getAttribute("data-block");
-  const block = draft.blocks.find(b => b.id === blockId);
-  if(!block) return;
-  const field = e.target.getAttribute("data-block-field");
-  if(!field) return;
-
-  if(field === "name") block.name = e.target.value.trim();
-  if(field === "rounds") block.rounds = Math.max(1, parseInt(e.target.value || "1", 10));
-  if(field === "isCircuit") block.isCircuit = (e.target.value === "true");
-  if(field === "restOverrideEnabled") block.restOverrideEnabled = (e.target.value === "true");
-  if(field === "restSec") block.restSec = Math.max(0, parseInt(e.target.value || "0", 10));
-
-  saveDraft(draft);
-  render();
-});
-
-$("#blockList").addEventListener("click", (e) => {
-  const btn = e.target.closest("[data-block-action]");
-  if(!btn) return;
-  const row = e.target.closest("[data-block]");
-  if(!row) return;
-  const blockId = row.getAttribute("data-block");
-  const action = btn.getAttribute("data-block-action");
-  if(action !== "remove") return;
-
-  draft.blocks = draft.blocks.filter(b => b.id !== blockId);
-  draft.items.forEach((item) => {
-    if(item.blockId === blockId) item.blockId = "";
-  });
-  saveDraft(draft);
-  render();
-});
 
 // Clear / Save / Start
 $("#clearWorkout").addEventListener("click", () => {
-  draft = { name:"", globalRestSec:60, autoStartRest:true, items:[], blocks:[] };
+  draft = { name:"", globalRestSec:60, autoStartRest:true, items:[] };
   saveDraft(draft);
   stopWorkout();
   render();
@@ -736,7 +779,7 @@ $("#startWorkout").addEventListener("click", () => {
 
   const queue = buildRunQueue();
   if(queue.length === 0) return;
-  runState = { phase: "work", queueIndex: 0, remainingSec: 0, intervalId: null, paused: false, activeRestSec: 0, queue, logs: [] };
+  runState = { phase: "work", queueIndex: 0, remainingSec: 0, intervalId: null, paused: false, activeRestSec: 0, queue, logs: [], lastInputs: {} };
   setRunnerButtons(true);
   $("#pauseResume").textContent = "Pause";
   const summary = $("#runSummary");

@@ -31,12 +31,13 @@ function addExerciseToWorkout(exId){
   if(!ex) return;
 
   const draft = loadWorkoutDraft();
-
   const item = {
     uid: (crypto?.randomUUID ? crypto.randomUUID() : (Date.now().toString(36) + Math.random().toString(36).slice(2))),
     exerciseId: ex.id,
     name: ex.name,
     group: ex.group,
+    circuitWithNext: false,
+    weight: "",
     // Builder fields:
     sets: 3,
     reps: 10,

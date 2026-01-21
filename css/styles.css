@@ -357,19 +357,6 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   gap: 14px;
   margin-top: 14px;
 }
-.block-panel{ margin-bottom:12px; }
-.block-row{
-  border:1px solid var(--line);
-  border-radius:14px;
-  background: var(--surface2);
-  padding:12px;
-}
-.block-controls{
-  display:grid;
-  grid-template-columns: 1fr;
-  gap:10px;
-  margin-top:8px;
-}
 
 .item{
   background: var(--surface2);
@@ -397,6 +384,21 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   gap:10px;
   margin-top: 10px;
 }
+.circuit-group{
+  border:1px dashed var(--line);
+  border-radius:18px;
+  padding:12px;
+  background: var(--surface2);
+}
+.circuit-group .item + .item{ margin-top:10px; }
+.circuit-label{
+  font-size:12px;
+  color:var(--muted);
+  margin-bottom:8px;
+  letter-spacing:.3px;
+  text-transform:uppercase;
+}
+.btn.is-active{ border-color: var(--chipLine); background: var(--accentSoft); }
 
 /* Runner */
 .runner-panel{ padding:16px; }
@@ -527,7 +529,6 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .cards{ grid-template-columns: repeat(3, minmax(0,1fr)); }
   .builder-toolbar{ grid-template-columns: 2fr 1fr 1fr 1fr auto; }
   .builder-grid{ grid-template-columns: 1.1fr .9fr; }
-  .block-controls{ grid-template-columns: repeat(3, minmax(0,1fr)); }
   .item-controls{ grid-template-columns: repeat(4, minmax(0,1fr)); }
   .item-actions{ display:flex; justify-content:flex-end; }
   .toolbar-actions{ display:flex; justify-content:flex-end; }
