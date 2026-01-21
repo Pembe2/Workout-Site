@@ -50,10 +50,19 @@
   }
 
   const topbar = document.querySelector(".topbar");
+  let isCompact = false;
   const onScroll = () => {
     if (!topbar) return;
-    const isCompact = window.scrollY > 120;
-    topbar.classList.toggle("compact", isCompact);
+    const y = window.scrollY;
+    if (!isCompact && y > 140) {
+      isCompact = true;
+      topbar.classList.add("compact");
+      return;
+    }
+    if (isCompact && y < 60) {
+      isCompact = false;
+      topbar.classList.remove("compact");
+    }
   };
   onScroll();
   window.addEventListener("scroll", onScroll, { passive: true });

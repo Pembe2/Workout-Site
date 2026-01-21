@@ -691,6 +691,16 @@ $("#workoutName").addEventListener("input", () => { updateDraftFromTopControls()
 $("#globalRest").addEventListener("change", () => { updateDraftFromTopControls(); render(); });
 $("#autoStartRest").addEventListener("change", () => { updateDraftFromTopControls(); });
 
+$("#applyDefaults").addEventListener("click", () => {
+  updateDraftFromTopControls();
+  draft.items = draft.items.map((item) => ({
+    ...item,
+    restSec: draft.globalRestSec,
+  }));
+  saveDraft(draft);
+  render();
+});
+
 $("#loadWorkout").addEventListener("click", () => {
   const select = $("#savedWorkoutSelect");
   const idx = select?.value;
