@@ -12,6 +12,137 @@
   --chip:#e4efe9;
   --chipLine:rgba(31,107,89,.35);
   --shadow:0 16px 40px rgba(31,20,10,.12);
+  --topbar:rgba(255,247,236,.92);
+  --surface:rgba(255,255,255,.75);
+  --surface2:rgba(255,255,255,.7);
+  --surface3:rgba(255,255,255,.8);
+  --accentSoft:rgba(31,107,89,.12);
+  --accentSoftHover:rgba(31,107,89,.22);
+  --accentSoftBorder:rgba(31,107,89,.55);
+}
+
+[data-theme="sunlit"]{
+  color-scheme: light;
+}
+
+[data-theme="citrus"]{
+  color-scheme: light;
+  --bg:#fff2d9;
+  --bg2:#f6e3c4;
+  --panel:#fff9ec;
+  --panel2:#fcebd4;
+  --text:#2b241a;
+  --muted:#6a5c4a;
+  --line:rgba(70,55,40,.18);
+  --accent:#c65a1b;
+  --accent2:#2f7a64;
+  --focus:rgba(198,90,27,.3);
+  --chip:#fde7d0;
+  --chipLine:rgba(198,90,27,.4);
+  --shadow:0 16px 40px rgba(74,40,15,.18);
+  --topbar:rgba(255,249,236,.92);
+  --surface:rgba(255,255,255,.8);
+  --surface2:rgba(255,255,255,.72);
+  --surface3:rgba(255,255,255,.86);
+  --accentSoft:rgba(198,90,27,.12);
+  --accentSoftHover:rgba(198,90,27,.22);
+  --accentSoftBorder:rgba(198,90,27,.55);
+}
+
+[data-theme="sky"]{
+  color-scheme: light;
+  --bg:#eaf3fb;
+  --bg2:#ddebf7;
+  --panel:#f6fbff;
+  --panel2:#e9f4ff;
+  --text:#1f2a39;
+  --muted:#5a6878;
+  --line:rgba(40,60,80,.18);
+  --accent:#2a5caa;
+  --accent2:#2e8c7a;
+  --focus:rgba(42,92,170,.28);
+  --chip:#dfeafa;
+  --chipLine:rgba(42,92,170,.35);
+  --shadow:0 16px 40px rgba(18,30,45,.16);
+  --topbar:rgba(246,251,255,.9);
+  --surface:rgba(255,255,255,.8);
+  --surface2:rgba(255,255,255,.72);
+  --surface3:rgba(255,255,255,.86);
+  --accentSoft:rgba(42,92,170,.12);
+  --accentSoftHover:rgba(42,92,170,.22);
+  --accentSoftBorder:rgba(42,92,170,.55);
+}
+
+[data-theme="midnight"]{
+  color-scheme: dark;
+  --bg:#0b1016;
+  --bg2:#111827;
+  --panel:#151d27;
+  --panel2:#10151d;
+  --text:#e8edf3;
+  --muted:#a5b0bf;
+  --line:rgba(231,238,248,.14);
+  --accent:#7aa2ff;
+  --accent2:#5dd6c7;
+  --focus:rgba(122,162,255,.35);
+  --chip:#1d2a3a;
+  --chipLine:rgba(122,162,255,.4);
+  --shadow:0 16px 40px rgba(0,0,0,.45);
+  --topbar:rgba(11,16,22,.92);
+  --surface:rgba(18,26,36,.8);
+  --surface2:rgba(18,26,36,.72);
+  --surface3:rgba(18,26,36,.86);
+  --accentSoft:rgba(122,162,255,.16);
+  --accentSoftHover:rgba(122,162,255,.24);
+  --accentSoftBorder:rgba(122,162,255,.55);
+}
+
+[data-theme="forest"]{
+  color-scheme: dark;
+  --bg:#0f1612;
+  --bg2:#121f19;
+  --panel:#18251f;
+  --panel2:#121a16;
+  --text:#e6efe9;
+  --muted:#9db0a6;
+  --line:rgba(230,239,233,.14);
+  --accent:#4fb38a;
+  --accent2:#d1a85b;
+  --focus:rgba(79,179,138,.32);
+  --chip:#1b2f27;
+  --chipLine:rgba(79,179,138,.45);
+  --shadow:0 16px 40px rgba(0,0,0,.45);
+  --topbar:rgba(15,22,18,.92);
+  --surface:rgba(19,30,25,.8);
+  --surface2:rgba(19,30,25,.72);
+  --surface3:rgba(19,30,25,.86);
+  --accentSoft:rgba(79,179,138,.16);
+  --accentSoftHover:rgba(79,179,138,.24);
+  --accentSoftBorder:rgba(79,179,138,.55);
+}
+
+[data-theme="charcoal"]{
+  color-scheme: dark;
+  --bg:#121214;
+  --bg2:#19191c;
+  --panel:#1f1f23;
+  --panel2:#151518;
+  --text:#f1f1f3;
+  --muted:#b0b0b8;
+  --line:rgba(241,241,243,.14);
+  --accent:#ff7a66;
+  --accent2:#74c7b8;
+  --focus:rgba(255,122,102,.32);
+  --chip:#2a2a30;
+  --chipLine:rgba(255,122,102,.4);
+  --shadow:0 16px 40px rgba(0,0,0,.5);
+  --topbar:rgba(18,18,20,.92);
+  --surface:rgba(28,28,34,.84);
+  --surface2:rgba(28,28,34,.74);
+  --surface3:rgba(28,28,34,.9);
+  --accentSoft:rgba(255,122,102,.16);
+  --accentSoftHover:rgba(255,122,102,.24);
+  --accentSoftBorder:rgba(255,122,102,.55);
 }
 
 *{ box-sizing:border-box; }
@@ -32,7 +163,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 
 .topbar{
   position:sticky; top:0; z-index:10;
-  background: rgba(255,247,236,.92);
+  background: var(--topbar);
   border-bottom:1px solid var(--line);
   backdrop-filter: blur(8px);
 }
@@ -42,6 +173,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   align-items:flex-start;
   gap:14px;
   padding:14px 16px;
+  flex-wrap:wrap;
 }
 .brand-title{
   font-weight:700;
@@ -67,8 +199,21 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   white-space:nowrap;
   font-family:"Trebuchet MS", "Gill Sans", "Calibri", sans-serif;
 }
-.navlink:hover{ color:var(--text); border-color:var(--line); background:rgba(31,107,89,.08); }
+.navlink:hover{ color:var(--text); border-color:var(--line); background:var(--accentSoft); }
 .navlink[aria-current="page"]{ color:var(--text); border-color:var(--chipLine); background:var(--chip); }
+
+.theme-control{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex-wrap:wrap;
+}
+.theme-label{
+  font-size:12px;
+  color:var(--muted);
+  font-family:"Trebuchet MS", "Gill Sans", "Calibri", sans-serif;
+}
+.theme-select{ min-width:160px; }
 
 .panel{
   background: linear-gradient(180deg, var(--panel), var(--panel2));
@@ -97,7 +242,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   padding:12px 12px;
   border-radius:14px;
   border:1px solid var(--line);
-  background: rgba(255,255,255,.75);
+  background: var(--surface);
   color:var(--text);
   outline:none;
   font-family:"Trebuchet MS", "Gill Sans", "Calibri", sans-serif;
@@ -119,13 +264,13 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 .card{
   display:block;
-  background: rgba(255,255,255,.7);
+  background: var(--surface2);
   border:1px solid var(--line);
   border-radius:16px;
   padding:14px;
   text-decoration:none;
 }
-.card:hover{ border-color:var(--chipLine); background: rgba(31,107,89,.08); }
+.card:hover{ border-color:var(--chipLine); background: var(--accentSoft); }
 .card-title{
   font-weight:700;
   margin-bottom:6px;
@@ -134,7 +279,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .card-sub{ color:var(--muted); font-size:13px; }
 
 .exercise{
-  background: rgba(255,255,255,.7);
+  background: var(--surface2);
   border:1px solid var(--line);
   border-radius:16px;
   padding:14px;
@@ -169,7 +314,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 .btn{
   appearance:none;
   border:1px solid var(--line);
-  background: rgba(255,255,255,.8);
+  background: var(--surface3);
   color: var(--text);
   padding: 12px 12px;
   border-radius: 14px;
@@ -177,10 +322,10 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   cursor: pointer;
   font-family:"Trebuchet MS", "Gill Sans", "Calibri", sans-serif;
 }
-.btn:hover{ border-color: var(--chipLine); background: rgba(31,107,89,.12); }
+.btn:hover{ border-color: var(--chipLine); background: var(--accentSoft); }
 .btn:disabled{ opacity:.55; cursor:not-allowed; }
-.btn.primary{ border-color: rgba(31,107,89,.55); background: rgba(31,107,89,.16); }
-.btn.primary:hover{ background: rgba(31,107,89,.22); }
+.btn.primary{ border-color: var(--accentSoftBorder); background: var(--accentSoft); }
+.btn.primary:hover{ background: var(--accentSoftHover); }
 .btn.secondary{ }
 .btn.danger{ border-color: rgba(204,73,47,.45); background: rgba(204,73,47,.14); }
 .btn.danger:hover{ background: rgba(204,73,47,.2); }
@@ -207,7 +352,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
 }
 
 .item{
-  background: rgba(255,255,255,.7);
+  background: var(--surface2);
   border:1px solid var(--line);
   border-radius:16px;
   padding:14px;
@@ -248,7 +393,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   padding: 14px;
   border-radius: 18px;
   border:1px solid var(--line);
-  background: rgba(255,255,255,.8);
+  background: var(--surface3);
   text-align:center;
 }
 .timer-value{ font-size:40px; font-weight:800; letter-spacing:.5px; }

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="sunlit">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -18,6 +18,17 @@
         <a class="navlink" href="back-pain.html">Back Pain Relief</a>
               <a class="navlink" href="workout.html">Workout Builder</a>
       </nav>
+      <div class="theme-control">
+        <label class="theme-label" for="themeSelect">Theme</label>
+        <select id="themeSelect" class="select theme-select">
+          <option value="sunlit">Sunlit</option>
+          <option value="citrus">Citrus</option>
+          <option value="sky">Sky</option>
+          <option value="midnight">Midnight</option>
+          <option value="forest">Forest</option>
+          <option value="charcoal">Charcoal</option>
+        </select>
+      </div>
     </div>
   </header>
 
@@ -71,6 +82,7 @@
     <div class="wrap muted">Static site package. Edit <code>js/data-exercises.js</code> to add exercises.</div>
   </footer>
 
+  <script src="js/theme.js"></script>
   <script type="module" src="js/app-home.js"></script>
 </body>
 </html>
