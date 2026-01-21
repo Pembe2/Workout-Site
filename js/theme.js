@@ -1,7 +1,7 @@
 (() => {
   const select = document.getElementById("themeSelect");
   if (!select) {
-    return;
+    // Still want header shrink behavior even if theme selector is missing.
   }
 
   const root = document.documentElement;
@@ -38,10 +38,23 @@
     }
   };
 
-  applyTheme(initial);
-  select.value = initial;
+  if (select) {
+    applyTheme(initial);
+    select.value = initial;
+  }
 
-  select.addEventListener("change", () => {
-    applyTheme(select.value);
-  });
+  if (select) {
+    select.addEventListener("change", () => {
+      applyTheme(select.value);
+    });
+  }
+
+  const topbar = document.querySelector(".topbar");
+  const onScroll = () => {
+    if (!topbar) return;
+    const isCompact = window.scrollY > 120;
+    topbar.classList.toggle("compact", isCompact);
+  };
+  onScroll();
+  window.addEventListener("scroll", onScroll, { passive: true });
 })();

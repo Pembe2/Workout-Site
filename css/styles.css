@@ -168,6 +168,13 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   border-bottom:1px solid var(--line);
   backdrop-filter: blur(8px);
 }
+.topbar.compact .topbar-inner{
+  padding:8px 16px;
+}
+.topbar.compact .brand,
+.topbar.compact .theme-control{
+  display:none;
+}
 .topbar-inner{
   display:flex;
   flex-direction:column;
@@ -497,6 +504,35 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   font-size:13px;
 }
 
+.overlay-modal{
+  position:fixed;
+  inset:0;
+  display:none;
+  z-index:110;
+}
+.overlay-modal.is-open{ display:block; }
+.overlay-modal-backdrop{
+  position:absolute;
+  inset:0;
+  background: rgba(5,8,12,.6);
+}
+.overlay-modal-panel{
+  position:relative;
+  max-width: 520px;
+  margin: 22vh auto 0;
+  padding: 18px;
+  border-radius: 18px;
+  background: linear-gradient(180deg, var(--panel), var(--panel2));
+  border:1px solid var(--line);
+  box-shadow: var(--shadow);
+}
+.overlay-modal-head{ margin-bottom:14px; }
+.overlay-modal-actions{
+  display:grid;
+  grid-template-columns: 1fr;
+  gap:10px;
+}
+
 @media (min-width: 720px){
   .wrap{ padding:20px; }
   .controls{ grid-template-columns: 1fr 1fr; }
@@ -509,6 +545,7 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .runner-actions{ grid-template-columns: repeat(4, minmax(0,1fr)); }
   .set-log-grid{ grid-template-columns: repeat(3, minmax(0,1fr)); }
   .summary-row{ grid-template-columns: repeat(4, minmax(0,1fr)); align-items:center; }
+  .overlay-modal-actions{ grid-template-columns: repeat(2, minmax(0,1fr)); }
 }
 
 @media (max-width: 560px){

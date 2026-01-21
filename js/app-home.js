@@ -43,8 +43,7 @@ function addExerciseToWorkout(exId){
     reps: 10,
     isTimed: false,
     durationSec: 45,
-    restOverrideEnabled: false,
-    restSec: 60,
+    restSec: draft.globalRestSec ?? 60,
   };
 
   draft.items.push(item);

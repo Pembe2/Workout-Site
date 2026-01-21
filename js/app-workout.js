@@ -332,8 +332,8 @@ function renderItem(item, idx, total){
   const weightValue = lastPerf?.weight ? lastPerf.weight : (item.weight ?? "");
 
   const isTimed = !!item.isTimed;
-  const restEffective = item.restOverrideEnabled ? item.restSec : draft.globalRestSec;
-  const restLabel = item.restOverrideEnabled ? "Item rest" : "Rest";
+  const restEffective = item.restSec ?? draft.globalRestSec;
+  const restLabel = "Rest";
   const isLast = idx === total - 1;
   const circuitLabel = item.circuitWithNext ? "Circuit with below: On" : "Circuit with below";
 
@@ -377,16 +377,8 @@ function renderItem(item, idx, total){
 
 
         <div class="field">
-          <label class="label">Rest override?</label>
-          <select class="select" data-field="restOverrideEnabled">
-            <option value="false" ${!item.restOverrideEnabled ? "selected" : ""}>Use default</option>
-            <option value="true" ${item.restOverrideEnabled ? "selected" : ""}>Override</option>
-          </select>
-        </div>
-
-        <div class="field" style="${item.restOverrideEnabled ? "" : "opacity:.55;"}">
           <label class="label">Rest (sec)</label>
-          <input class="input" type="number" min="0" step="5" data-field="restSec" value="${item.restSec ?? 60}" ${item.restOverrideEnabled ? "" : "disabled"}>
+          <input class="input" type="number" min="0" step="5" data-field="restSec" value="${restEffective}">
         </div>
       </div>
 
@@ -430,7 +422,7 @@ function setRunnerButtons(enabled){
   $("#pauseResume").disabled = !enabled;
   $("#completeSet").disabled = !enabled;
   $("#skip").disabled = !enabled;
-  $("#stop").disabled = !enabled;
+  $("#stop").disabled = !enabled || !runState?.paused;
 }
 
 function setRunnerUI(title, sub, label, seconds, chipsHtml=""){
@@ -465,7 +457,7 @@ function startCountdown(seconds, onDone){
 }
 
 function getRestSec(item){
-  if(item.restOverrideEnabled){
+  if(item.restSec !== undefined && item.restSec !== null){
     return Math.max(0, +item.restSec || 0);
   }
   return Math.max(0, +draft.globalRestSec || 0);
@@ -644,6 +636,8 @@ function finishWorkout(){
   setRunnerUI("Workout complete", "Nice work. You can edit and start again.", "Done", 0, chip("Complete"));
   $("#timerValue").textContent = "00:00";
   $("#completeSet").disabled = true;
+  closePauseModal();
+  closeConfirmStopModal();
   renderSummary(logs);
 }
 
@@ -655,6 +649,36 @@ function stopWorkout(){
   setRunnerUI("Stopped", "Workout stopped. Edit your plan or press Start to run again.", "Stopped", 0, chip("Stopped"));
   $("#timerValue").textContent = "00:00";
   $("#completeSet").disabled = true;
+  closePauseModal();
+  closeConfirmStopModal();
+}
+
+function openPauseModal(){
+  const modal = $("#pauseModal");
+  if(!modal) return;
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closePauseModal(){
+  const modal = $("#pauseModal");
+  if(!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
+}
+
+function openConfirmStopModal(){
+  const modal = $("#confirmStopModal");
+  if(!modal) return;
+  modal.classList.add("is-open");
+  modal.setAttribute("aria-hidden", "false");
+}
+
+function closeConfirmStopModal(){
+  const modal = $("#confirmStopModal");
+  if(!modal) return;
+  modal.classList.remove("is-open");
+  modal.setAttribute("aria-hidden", "true");
 }
 
 // ----------------- Events -----------------
@@ -715,7 +739,6 @@ $("#workoutList").addEventListener("change", (e) => {
   if(field === "reps") item.reps = Math.max(1, parseInt(val || "1", 10));
   if(field === "durationSec") item.durationSec = Math.max(1, parseInt(val || "1", 10));
   if(field === "isTimed") item.isTimed = (val === "true");
-  if(field === "restOverrideEnabled") item.restOverrideEnabled = (val === "true");
   if(field === "restSec") item.restSec = Math.max(0, parseInt(val || "0", 10));
   if(field === "weight") item.weight = val;
 
@@ -793,8 +816,10 @@ $("#startWorkout").addEventListener("click", () => {
 // Runner controls
 $("#pauseResume").addEventListener("click", () => {
   if(!runState) return;
-  runState.paused = !runState.paused;
-  $("#pauseResume").textContent = runState.paused ? "Resume" : "Pause";
+  runState.paused = true;
+  $("#pauseResume").textContent = "Resume";
+  setRunnerButtons(true);
+  openPauseModal();
 });
 
 $("#completeSet").addEventListener("click", () => {
@@ -819,10 +844,52 @@ $("#skip").addEventListener("click", () => {
   }
 });
 
-$("#stop").addEventListener("click", () => stopWorkout());
+$("#stop").addEventListener("click", () => {
+  if(!runState?.paused) return;
+  openConfirmStopModal();
+});
 
 document.addEventListener("click", (e) => {
   const closeBtn = e.target.closest("[data-action=\"closeRun\"]");
   if(!closeBtn) return;
   closeRunModal();
+});
+
+document.addEventListener("click", (e) => {
+  const resume = e.target.closest("[data-action=\"resumeWorkout\"]");
+  if(resume){
+    if(runState){
+      runState.paused = false;
+      $("#pauseResume").textContent = "Pause";
+      setRunnerButtons(true);
+    }
+    closePauseModal();
+    return;
+  }
+
+  const requestStop = e.target.closest("[data-action=\"requestStop\"]");
+  if(requestStop){
+    openConfirmStopModal();
+    return;
+  }
+
+  const confirmStop = e.target.closest("[data-action=\"confirmStop\"]");
+  if(confirmStop){
+    stopWorkout();
+    closeConfirmStopModal();
+    closePauseModal();
+    $("#pauseResume").textContent = "Pause";
+    return;
+  }
+
+  const closePause = e.target.closest("[data-action=\"closePause\"]");
+  if(closePause){
+    closePauseModal();
+    return;
+  }
+
+  const closeConfirm = e.target.closest("[data-action=\"closeConfirmStop\"]");
+  if(closeConfirm){
+    closeConfirmStopModal();
+  }
 });

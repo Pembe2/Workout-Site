@@ -164,6 +164,34 @@
     </div>
   </div>
 
+  <div class="overlay-modal" id="pauseModal" aria-hidden="true">
+    <div class="overlay-modal-backdrop" data-action="closePause"></div>
+    <div class="overlay-modal-panel" role="dialog" aria-modal="true" aria-labelledby="pauseTitle">
+      <div class="overlay-modal-head">
+        <div class="runner-title" id="pauseTitle">Workout paused</div>
+        <div class="muted small">Resume or stop this session.</div>
+      </div>
+      <div class="overlay-modal-actions">
+        <button class="btn primary" type="button" data-action="resumeWorkout">Resume</button>
+        <button class="btn danger" type="button" data-action="requestStop">Stop workout</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay-modal" id="confirmStopModal" aria-hidden="true">
+    <div class="overlay-modal-backdrop" data-action="closeConfirmStop"></div>
+    <div class="overlay-modal-panel" role="dialog" aria-modal="true" aria-labelledby="confirmStopTitle">
+      <div class="overlay-modal-head">
+        <div class="runner-title" id="confirmStopTitle">Stop workout?</div>
+        <div class="muted small">Are you sure you want to stop your workout?</div>
+      </div>
+      <div class="overlay-modal-actions">
+        <button class="btn secondary" type="button" data-action="closeConfirmStop">Keep going</button>
+        <button class="btn danger" type="button" data-action="confirmStop">Yes, stop</button>
+      </div>
+    </div>
+  </div>
+
   <footer class="footer">
     <div class="wrap muted">Workouts are stored locally in your browser.</div>
   </footer>
