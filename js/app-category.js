@@ -94,22 +94,22 @@ function renderExerciseCard(ex){
   ].filter(Boolean).join(" • ");
 
   const steps = (ex.steps || []).map(s => `<li>${s}</li>`).join("");
-  const cues = (ex.cues || []).length ? `<div class="ex-meta">Cues: ${(ex.cues || []).join(" • ")}</div>` : "";
+  const cues = (ex.cues || []).length ? `<div class="ex-meta ex-cues">Cues: ${(ex.cues || []).join(" • ")}</div>` : "";
 
   return `
     <div class="exercise">
       <div class="ex-head">
-        <div>
+        <div class="ex-main">
           <div class="ex-title">${ex.name}</div>
           <div class="ex-meta">${meta}</div>
           ${cues}
         </div>
         <div class="chips">${chips}</div>
-        <div style="margin-top:10px; display:flex; justify-content:flex-end;">
+        <div class="ex-actions">
           <button class="btn primary" type="button" data-action="add" data-exid="${ex.id}">Add</button>
         </div>
       </div>
-      <ul class="list">${steps}</ul>
+      <ul class="list ex-steps">${steps}</ul>
     </div>
   `;
 }

@@ -21,11 +21,11 @@
   --accentSoftBorder:rgba(31,107,89,.55);
 }
 
-[data-theme="sunlit"]{
+:root[data-theme="sunlit"]{
   color-scheme: light;
 }
 
-[data-theme="citrus"]{
+:root[data-theme="citrus"]{
   color-scheme: light;
   --bg:#fff2d9;
   --bg2:#f6e3c4;
@@ -49,7 +49,7 @@
   --accentSoftBorder:rgba(198,90,27,.55);
 }
 
-[data-theme="sky"]{
+:root[data-theme="sky"]{
   color-scheme: light;
   --bg:#eaf3fb;
   --bg2:#ddebf7;
@@ -73,7 +73,7 @@
   --accentSoftBorder:rgba(42,92,170,.55);
 }
 
-[data-theme="midnight"]{
+:root[data-theme="midnight"]{
   color-scheme: dark;
   --bg:#0b1016;
   --bg2:#111827;
@@ -97,7 +97,7 @@
   --accentSoftBorder:rgba(122,162,255,.55);
 }
 
-[data-theme="forest"]{
+:root[data-theme="forest"]{
   color-scheme: dark;
   --bg:#0f1612;
   --bg2:#121f19;
@@ -121,7 +121,7 @@
   --accentSoftBorder:rgba(79,179,138,.55);
 }
 
-[data-theme="charcoal"]{
+:root[data-theme="charcoal"]{
   color-scheme: dark;
   --bg:#121214;
   --bg2:#19191c;
@@ -290,8 +290,14 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   align-items:flex-start;
   gap:8px;
 }
+.ex-main{ width:100%; }
 .ex-title{ font-weight:700; font-family:"Trebuchet MS", "Gill Sans", "Calibri", sans-serif; }
 .ex-meta{ color:var(--muted); font-size:12px; margin-top:4px; }
+.ex-actions{
+  display:flex;
+  width:100%;
+  justify-content:flex-end;
+}
 .list{ margin:10px 0 0 18px; color:var(--text); }
 .chips{ display:flex; flex-wrap:wrap; gap:6px; justify-content:flex-start; }
 .chip{
@@ -415,6 +421,15 @@ code{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liber
   .toolbar-actions{ grid-template-columns: repeat(3, minmax(0,1fr)); }
   .item-actions{ grid-template-columns: repeat(3, minmax(0,1fr)); }
   .runner-actions{ grid-template-columns: repeat(4, minmax(0,1fr)); }
+}
+
+@media (max-width: 560px){
+  .ex-steps li:nth-child(n+3){ display:none; }
+  .ex-cues{ display:none; }
+  .ex-actions{ justify-content:stretch; }
+  .ex-actions .btn{ width:100%; }
+  .chip{ font-size:11px; padding:5px 8px; }
+  .ex-meta{ font-size:11px; }
 }
 
 @media (min-width: 1024px){
